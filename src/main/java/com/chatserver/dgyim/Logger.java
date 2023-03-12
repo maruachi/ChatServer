@@ -22,7 +22,7 @@ public class Logger implements Closeable{
         this.writer = writer;
     }
 
-    public Logger createByUsername(LogFilename logFilename) {
+    public static Logger createByUsername(LogFilename logFilename) {
         return new Logger(logFilename, createLogWriter(logFilename));
     }
     //    날짜 변경점으로 파일 출력 지점을 시간에 따라 맞춰가야 함 -> 시간을 가지고 있으면 좋을듯
