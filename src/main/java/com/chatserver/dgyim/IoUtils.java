@@ -35,4 +35,10 @@ public class IoUtils {
         OutputStream bos = new BufferedOutputStream(outputStream, 8192);
         return new OutputStreamWriter(bos, StandardCharsets.UTF_8);
     }
+
+    public static BufferedReader toBufferedReader(InputStream inputStream) {
+        BufferedInputStream bis = new BufferedInputStream(inputStream, 8192);
+        InputStreamReader reader = new InputStreamReader(bis, StandardCharsets.UTF_8);
+        return new BufferedReader(reader, 8192);
+    }
 }

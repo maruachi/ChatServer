@@ -1,0 +1,13 @@
+ChatServer에서 oop로 만들만한 것 탐색해보기
+
+일단 ChatServer의 기능에서 출발해서 어떤 걸 묶을 수 있는지 살펴보자
+
+- client의 요청을 응답대기한다.
+- 요청이 오면 login prcoess를 진행
+- client에 오는 chat을 log로 저장한다
+- server의 명령어를 실행시킨다. (ServerShell)
+- server 입력 내용을 broadcast한다. (to, toAll)
+
+logger: log로 저장한다.
+client 오는 chat을 받는다: listener
+login process를 진행한다:
