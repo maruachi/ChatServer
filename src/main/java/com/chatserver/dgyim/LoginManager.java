@@ -1,66 +1,35 @@
 package com.chatserver.dgyim;
 
-import java.io.*;
-import java.net.Socket;
 import java.util.HashMap;
 
+// client의 로그인을 담당한다.
+// 계정이 올바른지 확인하는 authentication
+// 입력된 계정정보를 받아오고 login 성공여부를 알려주는 login
+// 로그인이 성공했을 때 "서버에 입장하셨습니다" 멘트 발송 -> 이건 loginManager의 역할인가?
+// "로그인에 성공하셨습니다" 라는 멘트면 loginManager의 역할인 거 같은데, 서버에 입장하셨습니다는 뭔가 느낌이 아닌 것 같다,,
+
+// 계정 등록하기
+// 인증하기
+
 public class LoginManager {
-    private static final HashMap<String, String> accounts = new HashMap<>();
+    private final HashMap<String, String> accounts;
 
-    private final InputStream inputStream;
-    private final OutputStream outputStream;
-
-    public LoginManager(InputStream inputStream, OutputStream outputStream) {
-        this.inputStream = inputStream;
-        this.outputStream = outputStream;
+    public LoginManager(HashMap<String, String> accounts) {
+        this.accounts = accounts;
     }
 
-    {
-        accounts.put("gyu", "123");
-        accounts.put("dong", "123");
+    public static LoginManager createEmpty() {
+        return new LoginManager(new HashMap<>());
     }
 
-    public static LoginManager createByClientSocket(Socket clientSocket) {
-        try {
-            return new LoginManager(clientSocket.getInputStream(), clientSocket.getOutputStream());
-        } catch (IOException e) {
-            e.printStackTrace();
-            return new LoginManager(new ByteArrayInputStream(), new ByteArrayOutputStream());
+    public void register(String username, String password) {
+        if (accounts.containsKey(username)) {
+            return;
         }
+        accounts.put(username, password);
     }
 
-    public boolean login() {
-        BufferedReader reader = IoUtils.toBufferedReader(inputStream);
-        int failCount = 0;
-        while (failCount < 2) {
-            try {
-                String line = reader.readLine();
-                String[] lineElements = line.split("[ ]+");
-
-                if (lineElements.length != 2) {
-                    failCount += 1;
-                    continue;
-                }
-
-                String username = lineElements[0];
-                String password = lineElements[1];
-
-                if (!authenticate(username, password)) {
-                    failCount += 1;
-                    continue;
-                }
-
-                return true;
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
-                failCount += 1;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean authenticate(String username, String password) {
+    public boolean authentication(String username, String password) {
         return accounts.containsKey(username) && accounts.get(username).equals(password);
     }
 }

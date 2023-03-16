@@ -4,18 +4,32 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 
 public class IoUtils {
+//    UserLogFilename -> String으로 받는 파라미터를 바꿨다.
+//    더 범용적으로 사용할 수 있는 FileWriter가 등장했다.
+//    String으로 주는 게 나을까 outputStream으로 주는 게 나을까?
+    public static Writer createFileWriter(String filename) {
+        OutputStream outputStream = new ByteArrayOutputStream();
+
+        try {
+            outputStream = new FileOutputStream(filename, true);
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+        }
+
+        return toWriter(outputStream);
+    }
 //    private static DateTimeFormatter HHMMSS_FORMMATER = DateTimeFormatter.ofPattern("hh:mm:ss");
 //    처음에는 append 기능 때문에 logger에 종속시킬려고 했지만 append는 logger가 가지는 핵심 개념은 아니다.
 //    단순 시스템 처리의 기능의 하나로서 이해하는 게 더 자연스럽다.
 //    그래서 logger에 있더는 IO 메소드를 유틸로 뺐다.
-    public static Writer createWriter(UserLog logFilename) {
+    public static Writer createWriter(UserLogFilename logFilename) {
 
 //        프로그램을 유지시키기 위해 빈 stream을 리턴하도록 함. 기능은 동작 안 할테지만 서비스는 계속 유지가 된다.
 //        기본값을 null로 설정하고 catch에서 빈 스트림을 생성할려고 했지만, 초반에 빈스트림으로 설정해두는 게 더 안정적인 코딩!
         OutputStream outputStream = new ByteArrayOutputStream();
 
         try {
-            String filename = logFilename.toFilename();
+            String filename = logFilename.getValue();
             outputStream = new FileOutputStream(filename, true);
         } catch (IOException ioException) {
             ioException.printStackTrace();

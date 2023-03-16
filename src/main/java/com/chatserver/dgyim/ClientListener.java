@@ -22,13 +22,21 @@ public class ClientListener {
         }
     }
 
+//    listen()은 항상 유효한 return만 준다는 설정
+//    만약에 while이 없다면 예외 처리를 어떻게 하는 게 좋을까?
     public Socket listen() {
         while (true) {
+//            try {
+//                return serverSocket.accept();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
             try {
-                Socket socket = serverSocket.accept();
-                return socket;
+                return serverSocket.accept();
             } catch (IOException e) {
                 e.printStackTrace();
+//                exception처리로 상위에서 관리하도록 하는 게 좋음
+//                코드의 의도가 잘 안 보임
             }
         }
     }

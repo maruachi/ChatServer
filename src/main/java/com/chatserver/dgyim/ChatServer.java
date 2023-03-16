@@ -1,5 +1,6 @@
 package com.chatserver.dgyim;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -15,13 +16,31 @@ public class ChatServer {
 //        listener를 수행한다. listener는 클라이언트와의 연결을 담당한다.
         ClientListener clientListener = ClientListener.createByPort(PORT);
 
+        LoginManager loginManager = LoginManager.createEmpty();
+        loginManager.register("dong", "123");
+
         while (true) {
 //        listen이 성공했을 때는 clientSocket을 return한다.
             Socket clientSocket = clientListener.listen();
 
-//        loginManager: client의 로그인을 담당한다.
-            LoginManager loginManager = LoginManager.createByClientSocket(clientSocket);
-            boolean isLogin = loginManager.login();
+            LoginProcess loginProcess = new LoginProcess(2, loginManager);
+
+            boolean isLogin = false;
+            try {
+                BufferedReader reader = IoUtils.toBufferedReader(clientSocket.getInputStream());
+                while (loginProcess.hasMoreTry()) {
+                    isLogin = loginProcess.tryLogin(reader.readLine());
+                    if (isLogin) {
+                        break;
+                    }
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            if (isLogin) {
+                //client와 chat을 연다.
+            }
 
 
         }

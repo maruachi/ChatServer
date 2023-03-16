@@ -11,10 +11,10 @@ public class LoggerTest {
     @Test
     void LogTest() {
 //        given
-        UserLog userLog = new UserLog("donggyu", LocalDate.of(1993, 8, 2));
+        UserLogFilename userLogFilename = new UserLogFilename("donggyu", LocalDate.of(1993, 8, 2));
 
 //        when
-        try (Logger logger = Logger.createByUserLog(userLog);){
+        try (Logger logger = Logger.createByUserLog(userLogFilename);){
             logger.log("message");
         } catch (IOException e) {
             e.printStackTrace();
@@ -29,7 +29,7 @@ public class LoggerTest {
 //        그렇다고 함수로 감싸서 이 코드를 테스트하고 사용하기에는 "테스트를 위해 함수를 새로 만들지 마라"의 원칙이 깨진다.
         char[] buffer = new char[1024];
         StringBuilder stringBuilder = new StringBuilder();
-        try (InputStream inputStream = new FileInputStream(userLog.toFilename());
+        try (InputStream inputStream = new FileInputStream(userLogFilename.getValue());
              BufferedInputStream bis = new BufferedInputStream(inputStream, 8192);
              Reader reader = new InputStreamReader(bis, StandardCharsets.UTF_8);) {
             while (true) {
@@ -42,6 +42,7 @@ public class LoggerTest {
         } catch (IOException ioException) {
             ioException.printStackTrace();
         }
+
 
 //        then
 //        결과가 테스트 실패로 나오는데 그 이유를 모르겠다... ㅠ
