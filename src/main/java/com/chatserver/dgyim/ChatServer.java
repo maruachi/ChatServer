@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.time.LocalDate;
 
 public class ChatServer {
     public static final int PORT = 7777;
@@ -26,11 +27,21 @@ public class ChatServer {
             LoginProcess loginProcess = new LoginProcess(2, loginManager);
 
             boolean isLogin = false;
+            String loginUsername = null;
             try {
                 BufferedReader reader = IoUtils.toBufferedReader(clientSocket.getInputStream());
                 while (loginProcess.hasMoreTry()) {
+                    //client와 chat을 여는 부분에서 username이 필요해짐
+                    //parseLoginLine을 통해 처리하는 방향이 맞는가??
+                    String loginLine = reader.readLine();
+                    String[] lineElements = loginLine.split("[ ]+");
+                    if (lineElements.length != 2) {
+                        continue;
+                    }
+                    String username = lineElements[0];
                     isLogin = loginProcess.tryLogin(reader.readLine());
                     if (isLogin) {
+                        loginUsername = username;
                         break;
                     }
                 }
@@ -40,9 +51,19 @@ public class ChatServer {
 
             if (isLogin) {
                 //client와 chat을 연다.
+                try (Logger logger = Logger.createByUserLog(new UserLogFilename(loginUsername, LocalDate.now()))) {
+                    BufferedReader reader = IoUtils.toBufferedReader(clientSocket.getInputStream());
+                    while (true) {
+                        String chatLine = reader.readLine();
+                        if (chatLine == null) {
+                            break;
+                        }
+                        logger.log(chatLine);
+                    }
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
             }
-
-
         }
 
 //        chatHandler: chat을 연결한다. 연결된 chat은 계속해서 log에 쌓인다. chatLogger도 고민 중
