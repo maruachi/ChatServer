@@ -2,9 +2,11 @@ package com.chatserver.dgyim;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.Writer;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.time.LocalDate;
+import java.util.HashMap;
 
 public class ChatServer {
     public static final int PORT = 7777;
@@ -14,6 +16,7 @@ public class ChatServer {
 //    chatServer는 server를 정상적으로 구동하고 정상적으로 종료하는 역할을 수행한다.
 
     public void run() {
+        HashMap<String, Socket> loginUserSockets = new HashMap<>();
 //        listener를 수행한다. listener는 클라이언트와의 연결을 담당한다.
         ClientListener clientListener = ClientListener.createByPort(PORT);
 
@@ -26,6 +29,9 @@ public class ChatServer {
 
             LoginProcess loginProcess = new LoginProcess(2, loginManager);
 
+            //여러 클라이언트가 동시 접속하는 경우에 한명의 클라이언트를 처리해야한 진행됨
+            //동시 처리를 위해 쓰레드로 감쌀 필요가 있다.
+            //이후에 변경 예정
             boolean isLogin = false;
             String loginUsername = null;
             try {
@@ -42,6 +48,7 @@ public class ChatServer {
                     isLogin = loginProcess.tryLogin(reader.readLine());
                     if (isLogin) {
                         loginUsername = username;
+                        loginUserSockets.put(username, clientSocket);
                         break;
                     }
                 }
@@ -59,6 +66,43 @@ public class ChatServer {
                             break;
                         }
                         logger.log(chatLine);
+                    }
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+
+            //server 명령어 기능 구현
+            //line 받기
+            //parsing하기
+            //command에 따라 메세지 전송 선택하기
+            //ServerShell
+            //명령어(?)
+            //몰라 일단 잘 모르겠으니 통째로 구현!!
+            while (true) {
+                BufferedReader reader = IoUtils.toBufferedReader(System.in);
+                try {
+                    //line에 뒷 요소가 메세지라는 건 공통의 요소!
+                    String line = reader.readLine();
+                    int messageIndex = line.indexOf(' ');
+                    if (messageIndex == -1) {
+                        continue;
+                    }
+                    String message = line.substring(messageIndex + 1);
+
+                    String targetUsername = line.substring(0, messageIndex);
+                    if ("all".equals(targetUsername)) {
+                        //모든 유저에게 보낸다
+                        for (Socket socket : loginUserSockets.values()) {
+
+                        }
+                        continue;
+                    }
+
+                    //타겟 유저에게만 보낸다
+                    if (loginUserSockets.containsKey(targetUsername)) {
+                        Socket targetSocket = loginUserSockets.get(targetUsername);
+                        continue;
                     }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
