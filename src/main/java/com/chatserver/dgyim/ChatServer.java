@@ -81,8 +81,8 @@ public class ChatServer {
             //ServerShell
             //명령어(?)
             //몰라 일단 잘 모르겠으니 통째로 구현!!
+            BufferedReader reader = IoUtils.toBufferedReader(System.in);
             while (true) {
-                BufferedReader reader = IoUtils.toBufferedReader(System.in);
                 try {
                     //line에 뒷 요소가 메세지라는 건 공통의 요소!
                     String line = reader.readLine();
@@ -90,25 +90,29 @@ public class ChatServer {
                     if (messageIndex == -1) {
                         continue;
                     }
-                    String message = line.substring(messageIndex + 1);
                     String targetUsername = line.substring(0, messageIndex);
+                    String message = line.substring(messageIndex + 1);
 
-                    List<Socket> targetSockets = new ArrayList<>();
-
+                    List<String> targetUsernames = new ArrayList<>();
                     if ("all".equals(targetUsername)) {
-                        targetSockets.addAll(loginUserSockets.values());
+                        targetUsernames.addAll(loginUserSockets.keySet());
                     }
 
                     if (loginUserSockets.containsKey(targetUsername)) {
-                        Socket targetSocket = loginUserSockets.get(targetUsername);
-                        targetSockets.add(targetSocket);
+                        targetUsernames.add(targetUsername);
                     }
 
-                    for (Socket targetSocket : targetSockets) {
+                    for (String username : targetUsernames) {
+                        Socket targetSocket = loginUserSockets.get(username);
                         Writer writer = IoUtils.toWriter(targetSocket.getOutputStream());
                         writer.write(message);
                         writer.write('\n');
                         writer.flush();
+                        try (Logger logger = Logger.createByUserLog(new UserLogFilename(username, LocalDate.now()))) {
+                            logger.log(message);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
                     }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
