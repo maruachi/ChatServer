@@ -90,25 +90,18 @@ public class ChatServer {
                     if (messageIndex == -1) {
                         continue;
                     }
-                    String targetUsername = line.substring(0, messageIndex);
+                    String targetUser = line.substring(0, messageIndex);
                     String message = line.substring(messageIndex + 1);
 
-                    List<String> targetUsernames = new ArrayList<>();
-                    if ("all".equals(targetUsername)) {
-                        targetUsernames.addAll(loginUserSockets.keySet());
-                    }
+                    List<String> targetUsernames = findTargetUsername(loginUserSockets, targetUser);
 
-                    if (loginUserSockets.containsKey(targetUsername)) {
-                        targetUsernames.add(targetUsername);
-                    }
-
-                    for (String username : targetUsernames) {
-                        Socket targetSocket = loginUserSockets.get(username);
+                    for (String targerUsername : targetUsernames) {
+                        Socket targetSocket = loginUserSockets.get(targerUsername);
                         Writer writer = IoUtils.toWriter(targetSocket.getOutputStream());
                         writer.write(message);
                         writer.write('\n');
                         writer.flush();
-                        try (Logger logger = Logger.createByUserLog(new UserLogFilename(username, LocalDate.now()))) {
+                        try (Logger logger = Logger.createByUserLog(new UserLogFilename(targerUsername, LocalDate.now()))) {
                             logger.log(message);
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -125,6 +118,18 @@ public class ChatServer {
 
 //        chatShell: shell의 chat 명령어를 담당한다.
 //        broadcast: shell 명령어 중 하나이다. all, send 커맨드를 처리한다.
+    }
+
+    private List<String> findTargetUsername(HashMap<String, Socket> loginUserSockets, String targetUser) {
+        List<String> targetUsernames = new ArrayList<>();
+        if ("all".equals(targetUser)) {
+            targetUsernames.addAll(loginUserSockets.keySet());
+        }
+
+        if (loginUserSockets.containsKey(targetUser)) {
+            targetUsernames.add(targetUser);
+        }
+        return targetUsernames;
     }
 
     public void close() {
