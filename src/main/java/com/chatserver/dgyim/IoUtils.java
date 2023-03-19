@@ -45,7 +45,7 @@ public class IoUtils {
         return toWriter(outputStream);
     }
 
-    private static Writer toWriter(OutputStream outputStream) {
+    public static Writer toWriter(OutputStream outputStream) {
         OutputStream bos = new BufferedOutputStream(outputStream, 8192);
         return new OutputStreamWriter(bos, StandardCharsets.UTF_8);
     }

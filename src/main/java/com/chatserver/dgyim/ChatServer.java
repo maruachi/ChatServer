@@ -1,12 +1,14 @@
 package com.chatserver.dgyim;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.Writer;
+import javax.naming.ldap.SortKey;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketPermission;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class ChatServer {
     public static final int PORT = 7777;
@@ -57,7 +59,7 @@ public class ChatServer {
             }
 
             if (isLogin) {
-                //client와 chat을 연다.
+                //client와 chat을 연다. 클라이언트의 챗을 로그로 남긴다.
                 try (Logger logger = Logger.createByUserLog(new UserLogFilename(loginUsername, LocalDate.now()))) {
                     BufferedReader reader = IoUtils.toBufferedReader(clientSocket.getInputStream());
                     while (true) {
@@ -89,20 +91,24 @@ public class ChatServer {
                         continue;
                     }
                     String message = line.substring(messageIndex + 1);
-
                     String targetUsername = line.substring(0, messageIndex);
-                    if ("all".equals(targetUsername)) {
-                        //모든 유저에게 보낸다
-                        for (Socket socket : loginUserSockets.values()) {
 
-                        }
-                        continue;
+                    List<Socket> targetSockets = new ArrayList<>();
+
+                    if ("all".equals(targetUsername)) {
+                        targetSockets.addAll(loginUserSockets.values());
                     }
 
-                    //타겟 유저에게만 보낸다
                     if (loginUserSockets.containsKey(targetUsername)) {
                         Socket targetSocket = loginUserSockets.get(targetUsername);
-                        continue;
+                        targetSockets.add(targetSocket);
+                    }
+
+                    for (Socket targetSocket : targetSockets) {
+                        Writer writer = IoUtils.toWriter(targetSocket.getOutputStream());
+                        writer.write(message);
+                        writer.write('\n');
+                        writer.flush();
                     }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
