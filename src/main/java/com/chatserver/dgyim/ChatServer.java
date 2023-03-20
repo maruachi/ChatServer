@@ -10,69 +10,72 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class ChatServer {
-    public static final int PORT = 7777;
 //    chatServer는 server가 본체이다
 //    chatServer는 client의 연결을 관리한다.
 //    chatServer는 server로서의 기능의 on-off 역할을 한다.
 //    chatServer는 server를 정상적으로 구동하고 정상적으로 종료하는 역할을 수행한다.
+public class ChatServer {
+    public static final int PORT = 7777;
 
+    // client와 연결과 로그인을 담당하는 while
+    // 로그인 성공 시에 클라이언트의 메세지를 수신을 담당하는 while
+    // 서버의 챗을 전송하고 로그에 남기는 while
     public void run() {
         HashMap<String, Socket> loginUserSockets = new HashMap<>();
-//        listener를 수행한다. listener는 클라이언트와의 연결을 담당한다.
+
         ClientListener clientListener = ClientListener.createByPort(PORT);
 
         LoginManager loginManager = LoginManager.createEmpty();
         loginManager.register("dong", "123");
 
         while (true) {
-//        listen이 성공했을 때는 clientSocket을 return한다.
             Socket clientSocket = clientListener.listen();
 
-            LoginProcess loginProcess = new LoginProcess(2, loginManager);
+            Thread loginProcessThread = new Thread(()->{
+                LoginProcess loginProcess = new LoginProcess(2, loginManager);
 
-            //여러 클라이언트가 동시 접속하는 경우에 한명의 클라이언트를 처리해야한 진행됨
-            //동시 처리를 위해 쓰레드로 감쌀 필요가 있다.
-            //이후에 변경 예정
-            boolean isLogin = false;
-            String loginUsername = null;
-            try {
-                BufferedReader reader = IoUtils.toBufferedReader(clientSocket.getInputStream());
-                while (loginProcess.hasMoreTry()) {
-                    //client와 chat을 여는 부분에서 username이 필요해짐
-                    //parseLoginLine을 통해 처리하는 방향이 맞는가??
-                    String loginLine = reader.readLine();
-                    String[] lineElements = loginLine.split("[ ]+");
-                    if (lineElements.length != 2) {
-                        continue;
-                    }
-                    String username = lineElements[0];
-                    isLogin = loginProcess.tryLogin(reader.readLine());
-                    if (isLogin) {
-                        loginUsername = username;
-                        loginUserSockets.put(username, clientSocket);
-                        break;
-                    }
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+                boolean isLogin = false;
+                String loginUsername = null;
 
-            if (isLogin) {
-                //client와 chat을 연다. 클라이언트의 챗을 로그로 남긴다.
-                try (Logger logger = Logger.createByUserLog(new UserLogFilename(loginUsername, LocalDate.now()))) {
+                try {
                     BufferedReader reader = IoUtils.toBufferedReader(clientSocket.getInputStream());
-                    while (true) {
-                        String chatLine = reader.readLine();
-                        if (chatLine == null) {
+                    while (loginProcess.hasMoreTry()) {
+                        String loginLine = reader.readLine();
+                        String[] lineElements = loginLine.split("[ ]+");
+                        if (lineElements.length != 2) {
+                            continue;
+                        }
+                        String username = lineElements[0];
+                        String password = lineElements[1];
+
+                        isLogin = loginProcess.tryLogin(username, password);
+                        if (isLogin) {
+                            loginUsername = username;
+                            loginUserSockets.put(username, clientSocket);
                             break;
                         }
-                        logger.log(chatLine);
+                    }
+
+                    //client와 chat을 연다. 클라이언트의 챗을 로그로 남긴다.
+                    if (isLogin) {
+                        try (Logger logger = Logger.createByUserLog(new UserLogFilename(loginUsername, LocalDate.now()))) {
+                            while (true) {
+                                String chatLine = reader.readLine();
+                                if (chatLine == null) {
+                                    break;
+                                }
+                                logger.log(chatLine);
+                            }
+                        } catch (IOException ioException) {
+                            ioException.printStackTrace();
+                        }
                     }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
                 }
-            }
+            });
+
+            loginProcessThread.start();
 
             //server 명령어 기능 구현
             //line 받기

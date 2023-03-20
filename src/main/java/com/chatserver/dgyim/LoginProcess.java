@@ -13,19 +13,19 @@ public class LoginProcess {
         this.loginManager = loginManager;
     }
 
-    public boolean tryLogin(String loginLine) {
+    public boolean tryLogin(String username, String password) {
         if (!hasMoreTry()) {
             return false;
         }
 
-        String[] lineElement = loginLine.split("[ ]+");
-        if (lineElement.length != 2) {
-            failCount++;
-            return false;
-        }
-
-        String username = lineElement[0];
-        String password = lineElement[1];
+//        String[] lineElement = loginLine.split("[ ]+");
+//        if (lineElement.length != 2) {
+//            failCount++;
+//            return false;
+//        }
+//
+//        String username = lineElement[0];
+//        String password = lineElement[1];
 
         boolean isAuthentication = loginManager.authentication(username, password);
         if (!isAuthentication) {

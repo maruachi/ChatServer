@@ -13,17 +13,17 @@ import static org.junit.jupiter.api.Assertions.*;
 class LoginProcessTest {
     @ParameterizedTest
     @CsvSource({
-            "dong, 123, dong 123, true",
-            "dong, 123, gyu 123, false"
+            "dong, 123, dong, 123, true",
+            "dong, 123, gyu, 123, false"
     })
-    void 계정_등록_여부에_따른_로그인_테스트(String registeredUsername, String registeredPassword, String loginLine, boolean expect) {
+    void 계정_등록_여부에_따른_로그인_테스트(String registeredUsername, String registeredPassword, String username, String password, boolean expect) {
         //given
         LoginManager loginManager = LoginManager.createEmpty();
         loginManager.register(registeredUsername, registeredPassword);
         LoginProcess loginProcess = new LoginProcess(2, loginManager);
 
         //when
-        boolean actual = loginProcess.tryLogin(loginLine);
+        boolean actual = loginProcess.tryLogin(username, password);
 
         //then
         Assertions.assertThat(actual).isEqualTo(expect);
@@ -36,15 +36,16 @@ class LoginProcessTest {
         loginManager.register("dong", "123");
         int limitTryCount = 2;
         LoginProcess loginProcess = new LoginProcess(2, loginManager);
-        String loginLine = "gyu 123";
+        String username = "gyu";
+        String password = "123";
 
         //when
         int tryCount = 0;
         while (tryCount < limitTryCount) {
-            loginProcess.tryLogin(loginLine);
+            loginProcess.tryLogin(username, password);
             tryCount++;
         }
-        boolean actual = loginProcess.tryLogin(loginLine);
+        boolean actual = loginProcess.tryLogin(username, password);
 
         //then
         Assertions.assertThat(actual).isFalse();
@@ -70,12 +71,13 @@ class LoginProcessTest {
         loginManager.register("dong", "123");
         int limitTryCount = 2;
         LoginProcess loginProcess = new LoginProcess(2, loginManager);
-        String loginLine = "gyu 123";
+        String username = "gyu";
+        String password = "123";
 
         //when
         int tryCount = 0;
         while (tryCount <= limitTryCount) {
-            loginProcess.tryLogin(loginLine);
+            loginProcess.tryLogin(username, password);
             tryCount++;
         }
         boolean actual = loginProcess.hasMoreTry();
