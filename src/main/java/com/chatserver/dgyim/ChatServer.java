@@ -18,19 +18,54 @@ public class ChatServer {
     public static final int PORT = 7777;
 
     // client와 연결과 로그인을 담당하는 while
+
     // 로그인 성공 시에 클라이언트의 메세지를 수신을 담당하는 while
     // 서버의 챗을 전송하고 로그에 남기는 while
     public void run() {
         HashMap<String, Socket> loginUserSockets = new HashMap<>();
 
+        Thread ServerChatProcessThread = new Thread(()->{
+            BufferedReader reader = IoUtils.toBufferedReader(System.in);
+            while (true) {
+                try {
+                    //line에 뒷 요소가 메세지라는 건 공통의 요소!
+                    String line = reader.readLine();
+                    int messageIndex = line.indexOf(' ');
+                    if (messageIndex == -1) {
+                        continue;
+                    }
+                    String targetUser = line.substring(0, messageIndex);
+                    String message = line.substring(messageIndex + 1);
+
+                    List<String> targetUsernames = findTargetUsername(loginUserSockets, targetUser);
+
+                    for (String targerUsername : targetUsernames) {
+                        Socket targetSocket = loginUserSockets.get(targerUsername);
+                        Writer writer = IoUtils.toWriter(targetSocket.getOutputStream());
+                        writer.write(message);
+                        writer.write('\n');
+                        writer.flush();
+                        try (Logger logger = Logger.createByUserLog(new UserLogFilename(targerUsername, LocalDate.now()))) {
+                            logger.log(message);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
+            }
+        });
+        ServerChatProcessThread.start();
+
         ClientListener clientListener = ClientListener.createByPort(PORT);
 
         LoginManager loginManager = LoginManager.createEmpty();
         loginManager.register("dong", "123");
-
         while (true) {
             Socket clientSocket = clientListener.listen();
 
+            //여기서 login process와 open chat이 합쳐져 있다. 분리하고 싶은데... 방법??
             Thread loginProcessThread = new Thread(()->{
                 LoginProcess loginProcess = new LoginProcess(2, loginManager);
 
@@ -75,45 +110,8 @@ public class ChatServer {
                 }
             });
 
+            //login에 성공 -> open chat이 코드로 보이게 하고 싶다.
             loginProcessThread.start();
-
-            //server 명령어 기능 구현
-            //line 받기
-            //parsing하기
-            //command에 따라 메세지 전송 선택하기
-            //ServerShell
-            //명령어(?)
-            //몰라 일단 잘 모르겠으니 통째로 구현!!
-            BufferedReader reader = IoUtils.toBufferedReader(System.in);
-            while (true) {
-                try {
-                    //line에 뒷 요소가 메세지라는 건 공통의 요소!
-                    String line = reader.readLine();
-                    int messageIndex = line.indexOf(' ');
-                    if (messageIndex == -1) {
-                        continue;
-                    }
-                    String targetUser = line.substring(0, messageIndex);
-                    String message = line.substring(messageIndex + 1);
-
-                    List<String> targetUsernames = findTargetUsername(loginUserSockets, targetUser);
-
-                    for (String targerUsername : targetUsernames) {
-                        Socket targetSocket = loginUserSockets.get(targerUsername);
-                        Writer writer = IoUtils.toWriter(targetSocket.getOutputStream());
-                        writer.write(message);
-                        writer.write('\n');
-                        writer.flush();
-                        try (Logger logger = Logger.createByUserLog(new UserLogFilename(targerUsername, LocalDate.now()))) {
-                            logger.log(message);
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                } catch (IOException ioException) {
-                    ioException.printStackTrace();
-                }
-            }
         }
 
 //        chatHandler: chat을 연결한다. 연결된 chat은 계속해서 log에 쌓인다. chatLogger도 고민 중
