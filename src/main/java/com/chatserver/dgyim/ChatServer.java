@@ -125,10 +125,12 @@ public class ChatServer {
         List<String> targetUsernames = new ArrayList<>();
         if ("all".equals(targetUser)) {
             targetUsernames.addAll(loginUserSockets.keySet());
+            return targetUsernames;
         }
 
         if (loginUserSockets.containsKey(targetUser)) {
             targetUsernames.add(targetUser);
+            return targetUsernames;
         }
         return targetUsernames;
     }
