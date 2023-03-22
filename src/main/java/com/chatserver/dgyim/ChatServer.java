@@ -91,19 +91,22 @@ public class ChatServer {
                         }
                     }
 
+
+                    if (!isLogin) {
+                        return;
+                    }
+
                     //client와 chat을 연다. 클라이언트의 챗을 로그로 남긴다.
-                    if (isLogin) {
-                        try (Logger logger = Logger.createByUserLog(new UserLogFilename(loginUsername, LocalDate.now()))) {
-                            while (true) {
-                                String chatLine = reader.readLine();
-                                if (chatLine == null) {
-                                    break;
-                                }
-                                logger.log(chatLine);
+                    try (Logger logger = Logger.createByUserLog(new UserLogFilename(loginUsername, LocalDate.now()))) {
+                        while (true) {
+                            String chatLine = reader.readLine();
+                            if (chatLine == null) {
+                                break;
                             }
-                        } catch (IOException ioException) {
-                            ioException.printStackTrace();
+                            logger.log(chatLine);
                         }
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
                     }
                 } catch (IOException ioException) {
                     ioException.printStackTrace();
