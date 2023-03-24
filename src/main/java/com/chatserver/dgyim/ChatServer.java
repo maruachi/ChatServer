@@ -96,6 +96,10 @@ public class ChatServer {
                         return;
                     }
 
+                    Writer writer = IoUtils.toWriter(clientSocket.getOutputStream());
+                    writer.write("서버에 입장하셨습니다");
+                    writer.write('\n');
+
                     //client와 chat을 연다. 클라이언트의 챗을 로그로 남긴다.
                     try (Logger logger = Logger.createByUserLog(new UserLogFilename(loginUsername, LocalDate.now()))) {
                         while (true) {
