@@ -49,6 +49,8 @@ public class Logger implements Closeable{
 
         try {
             writer.write(message);
+            writer.write('\n');
+            writer.flush();
         } catch (IOException e) {
             e.printStackTrace();
         }

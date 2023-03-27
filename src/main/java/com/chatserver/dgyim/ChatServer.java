@@ -17,6 +17,12 @@ import java.util.List;
 public class ChatServer {
     public static final int PORT = 7777;
 
+    public static void main(String[] args) {
+        ChatServer chatServer = new ChatServer();
+
+        chatServer.run();
+    }
+
     // client와 연결과 로그인을 담당하는 while
 
     // 로그인 성공 시에 클라이언트의 메세지를 수신을 담당하는 while
@@ -74,8 +80,13 @@ public class ChatServer {
 
                 try {
                     BufferedReader reader = IoUtils.toBufferedReader(clientSocket.getInputStream());
+                    Writer writer = IoUtils.toWriter(clientSocket.getOutputStream());
                     while (loginProcess.hasMoreTry()) {
                         String loginLine = reader.readLine();
+                        if (loginLine == null) {
+                            continue;
+                        }
+
                         String[] lineElements = loginLine.split("[ ]+");
                         if (lineElements.length != 2) {
                             continue;
@@ -84,21 +95,31 @@ public class ChatServer {
                         String password = lineElements[1];
 
                         isLogin = loginProcess.tryLogin(username, password);
+                        System.out.println(isLogin);
                         if (isLogin) {
                             loginUsername = username;
                             loginUserSockets.put(username, clientSocket);
+
                             break;
                         }
+
+
                     }
 
-
                     if (!isLogin) {
+                        writer.write("FAIL");
+                        writer.write('\n');
+                        writer.flush();
                         return;
                     }
 
-                    Writer writer = IoUtils.toWriter(clientSocket.getOutputStream());
+                    writer.write("SUCCESS");
+                    writer.write('\n');
+                    writer.flush();
+
                     writer.write("서버에 입장하셨습니다");
                     writer.write('\n');
+                    writer.flush();
 
                     //client와 chat을 연다. 클라이언트의 챗을 로그로 남긴다.
                     try (Logger logger = Logger.createByUserLog(new UserLogFilename(loginUsername, LocalDate.now()))) {
