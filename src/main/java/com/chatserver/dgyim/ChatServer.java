@@ -96,10 +96,16 @@ public class ChatServer {
                         String password = lineElements[1];
 
                         isLogin = loginProcess.tryLogin(username, password);
-                        System.out.println(isLogin);
                         if (isLogin) {
                             loginUsername = username;
                             loginUserSockets.put(username, clientSocket);
+                            break;
+                        }
+
+                        if (!loginProcess.hasMoreTry()) {
+                            writer.write("TERMINATE");
+                            writer.write('\n');
+                            writer.flush();
                             break;
                         }
 
