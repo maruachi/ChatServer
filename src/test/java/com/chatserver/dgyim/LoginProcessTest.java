@@ -41,7 +41,7 @@ class LoginProcessTest {
 
         //when
         int tryCount = 0;
-        while (tryCount < limitTryCount) {
+        while (tryCount < limitTryCount - 1) {
             loginProcess.tryLogin(username, password);
             tryCount++;
         }
