@@ -68,6 +68,7 @@ public class ChatServer {
 
         LoginManager loginManager = LoginManager.createEmpty();
         loginManager.register("dong", "123");
+        loginManager.register("gyu", "321");
         while (true) {
             Socket clientSocket = clientListener.listen();
 
@@ -99,17 +100,15 @@ public class ChatServer {
                         if (isLogin) {
                             loginUsername = username;
                             loginUserSockets.put(username, clientSocket);
-
                             break;
                         }
 
-
-                    }
-
-                    if (!isLogin) {
                         writer.write("FAIL");
                         writer.write('\n');
                         writer.flush();
+                    }
+
+                    if (!isLogin) {
                         return;
                     }
 
