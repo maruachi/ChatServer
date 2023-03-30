@@ -35,6 +35,10 @@ public class LoginProcess {
     }
 
     public boolean hasMoreTry() {
-        return failCount <= tryCount;
+        return failCount < tryCount;
+    }
+
+    public boolean hasNotMoreTry() {
+        return !hasMoreTry();
     }
 }
